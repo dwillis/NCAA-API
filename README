@@ -1,3 +1,3 @@
 ==== NCAA API ====
 
-A Python application to turn the NCAA's Web-based statistics into an API. Relies on Django, BeautifulSoup and madness. And, in an ironic twist, the NCAA's stat site is a Rails app.
+A Python application to turn the NCAA's Web-based statistics into an API. Relies on Django, BeautifulSoup and madness. And, in an ironic twist, the NCAA's stat site is a Rails app. The initial application is for men's basketball, but in theory (and my dreams) it could be extended to other sports.
