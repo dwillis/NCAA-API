@@ -33,7 +33,10 @@ def roster_parser(season_id, team_id, division=1):
         player, player_created = Player.objects.get_or_create(name=name, ncaa_id = ncaa_id)
         player_season, ps_created = PlayerSeason.objects.get_or_create(player=player, team_season=team_season)
         if ps_created:
-            player_season.jersey = int(p.findAll('td')[0].contents[0])
+            try:
+                player_season.jersey = int(p.findAll('td')[0].contents[0])
+            except:
+                player_season.jersey = None
             try:
                 player_season.position = SafeUnicode(p.findAll('td')[2].contents[0])
                 player_season.feet = int(p.findAll('td')[3].contents[0].split('-')[0])
