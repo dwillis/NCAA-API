@@ -24,12 +24,13 @@ def roster_parser(season_id, team_id, division=1):
     rows = soup.findAll('table')[2].findAll('tr')
     player_links = rows[2:len(rows)]
     for p in player_links:
-        ncaa_id = int(float(p.findAll('td')[1].find('a')['href'].split('=', 2)[2]))
-        player, player_created = Player.objects.get_or_create(ncaa_id = ncaa_id)
-        if player_created:
-            last, first = [x.strip() for x in p.findAll('td')[1].find('a').contents[0].split(',')]
-            player.name = first + u' '+ last
-            player.save()
+        try:
+            ncaa_id = int(float(p.findAll('td')[1].find('a')['href'].split('=', 2)[2]))
+            name = extract_player_name(p.findAll('td')[1].find('a').contents[0].split(','))
+        except:
+            ncaa_id = -1
+            name = extract_player_name(p.findAll('td')[1].contents[0].split(','))
+        player, player_created = Player.objects.get_or_create(name=name, ncaa_id = ncaa_id)
         player_season, ps_created = PlayerSeason.objects.get_or_create(player=player, team_season=team_season)
         if ps_created:
             player_season.jersey = int(p.findAll('td')[0].contents[0])
@@ -42,3 +43,11 @@ def roster_parser(season_id, team_id, division=1):
                 pass
             player_season.save()
 
+def extract_player_name(name_text):
+    try:
+        last, first = [x.strip() for x in name_text]
+        name = first + u' '+ last
+    except ValueError:
+        last, rest, first = [x.strip() for x in name_text]
+        name = first + u' '+ last + u' '+ rest
+    return name
