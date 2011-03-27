@@ -3,6 +3,10 @@ from django.template.defaultfilters import slugify
 from decimal import *
 
 class Team(models.Model):
+    """
+    Represents a college with a basketball team. The NCAA id is the one used by the 
+    stats.ncaa.org site to denote a team. For example, Pittsburgh's id is 545.
+    """    
     ncaa_id = models.IntegerField()
     name = models.CharField(max_length=125)
     slug = models.SlugField(max_length=125)
@@ -16,6 +20,10 @@ class Team(models.Model):
 
     
 class Season(models.Model):
+    """
+    Represents a single basketball season which spans two years. The NCAA id is the one used by the 
+    stats.ncaa.org site to denote a season. For example, the 2010-11 season has an id of 10440.
+    """
     season = models.CharField(max_length=7)
     start_year = models.IntegerField()
     end_year = models.IntegerField()
@@ -25,6 +33,11 @@ class Season(models.Model):
         return self.season
 
 class TeamSeason(models.Model):
+    """
+    Represents a team during a particular season, along with information about that team. Since
+    a team can change divisions from one season to the next, the division information is here, not
+    in Team.
+    """
     team = models.ForeignKey(Team)
     season = models.ForeignKey(Season)
     division = models.IntegerField()
@@ -80,6 +93,11 @@ class TeamSeason(models.Model):
     
 
 class Player(models.Model):
+    """
+    Represents a college basketball player as identified by the NCAA. The ncaa_id is the unique one used by 
+    the stats.ncaa.org site. For example, Ashton Gibbs of Pittsburgh has an id of 904890.0, of which we only
+    store the integer, since that's all that seems to matter.
+    """
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255)
     ncaa_id = models.IntegerField()
@@ -93,6 +111,11 @@ class Player(models.Model):
 
     
 class PlayerSeason(models.Model):
+    """
+    Represents a college basketball player during a particular season. Since player information such as uniform
+    number and year change from season to season, this information is retained here rather than in Player. The 
+    height is broken into two fields to enable comparisons.
+    """
     player = models.ForeignKey(Player)
     team_season = models.ForeignKey(TeamSeason)
     position = models.CharField(max_length=7)

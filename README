@@ -1,3 +1,5 @@
 ==== NCAA API ====
 
 A Python application to turn the NCAA's Web-based statistics into an API. Relies on Django, BeautifulSoup and madness. And, in an ironic twist, the NCAA's stat site is a Rails app. The initial application is for men's basketball, but in theory (and my dreams) it could be extended to other sports.
+
+What works: Provided you create a Season object using the appropriate NCAA id (see the models in the mbb app for details), you can run the team_parser and roster_parser to fill out information about teams and players. TK: season stats for teams and players first, then individual games.
