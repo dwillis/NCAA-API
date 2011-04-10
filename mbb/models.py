@@ -96,7 +96,8 @@ class Player(models.Model):
     """
     Represents a college basketball player as identified by the NCAA. The ncaa_id is the unique one used by 
     the stats.ncaa.org site. For example, Ashton Gibbs of Pittsburgh has an id of 904890.0, of which we only
-    store the integer, since that's all that seems to matter.
+    store the integer, since that's all that seems to matter. Not every player has an ID, however, including
+    some transfers who are not eligible in a given year.
     """
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255)
@@ -114,7 +115,8 @@ class PlayerSeason(models.Model):
     """
     Represents a college basketball player during a particular season. Since player information such as uniform
     number and year change from season to season, this information is retained here rather than in Player. The 
-    height is broken into two fields to enable comparisons.
+    height is broken into two fields to enable comparisons. Not all players have positions, heights, years or
+    jersey numbers that are integers.
     """
     player = models.ForeignKey(Player)
     team_season = models.ForeignKey(TeamSeason)
@@ -157,4 +159,72 @@ class PlayerSeason(models.Model):
     
     def ncaa_url(self):
         return "http://stats.ncaa.org/player?game_sport_year_ctl_id=%s&stats_player_seq=%s" % (self.team_season_id, self.player_id)
+    
+class Game(models.Model):
+    """
+    Represents a game between two teams. Has an NCAA-generated unique ID and can have multiple
+    TeamGamePeriods.
+    """
+    ncaa_id = models.IntegerField()
+    home_team = models.ForeignKey(TeamSeason, related_name="home_team")
+    visiting_team = models.ForeignKey(TeamSeason, related_name="visiting_team")
+    datetime = models.DateTimeField()
+    location = models.CharField(max_length=255)
+    attendance = models.IntegerField(null=True)
+    officials = models.CharField(max_length=255)
+    home_team_score = models.IntegerField()
+    visiting_team_score = models.IntegerField()
+    
+    def __unicode__(self):
+        return u"%s" % self.ncaa_id
+    
+    def box_score_url(self):
+        return "http://stats.ncaa.org/game/box_score/%s" % self.ncaa_id
+    
+    def period_stats_url(self):
+        return "http://stats.ncaa.org/game/period_stats/%s" % self.ncaa_id
+    
+    def play_by_play_url(self):
+        return "http://stats.ncaa.org/game/play_by_play/%s" % self.ncaa_id
+
+
+class TeamGamePeriod(models.Model):
+    """
+    Represents a period within a game for a team - typically the first or second halves, 
+    or final, but games may have multiple overtime periods as well. Times of possession
+    fields are in seconds, not minutes.
+    """
+    game = models.ForeignKey(Game)
+    team = models.ForeignKey(TeamSeason)
+    is_home_team = models.BooleanField()
+    game_period = models.CharField(max_length=5)
+    field_goals_made = models.IntegerField(default=0)
+    field_goals_attempted = models.IntegerField(default=0)
+    three_point_fg_made = models.IntegerField(default=0)
+    three_point_fg_attempted = models.IntegerField(default=0)
+    free_throws_made = models.IntegerField(default=0)
+    free_throws_attempted = models.IntegerField(default=0)
+    points = models.IntegerField(default=0)
+    offensive_rebounds = models.IntegerField(default=0)
+    defensive_rebounds = models.IntegerField(default=0)
+    total_rebounds = models.IntegerField(default=0)
+    assists = models.IntegerField(default=0)
+    turnovers = models.IntegerField(default=0)
+    steals = models.IntegerField(default=0)
+    blocks = models.IntegerField(default=0)
+    fouls = models.IntegerField(default=0)
+    time_of_possession = models.IntegerField(default=0)
+    scoring_time_of_possession = models.IntegerField(default=0)
+    times_took_lead = models.IntegerField(default=0)
+    largest_lead = models.IntegerField(default=0)
+    time_of_largest_lead = models.IntegerField(default=0)
+    bench_points = models.IntegerField(default=0)
+    times_tied_score = models.IntegerField(default=0)
+    second_chance_points = models.IntegerField(default=0)
+    points_off_turnovers = models.IntegerField(default=0)
+    fastbreak_points = models.IntegerField(default=0)
+    points_in_paint = models.IntegerField(default=0)
+    
+    
+
     

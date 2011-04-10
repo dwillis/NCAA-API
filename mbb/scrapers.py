@@ -1,14 +1,26 @@
-import urllib
-from BeautifulSoup import BeautifulSoup
+import datetime
+from dateutil.parser import *
+from ncaa_api.utils import soupify
 from django.utils.safestring import SafeUnicode
 from ncaa_api.mbb.models import Season, Team, TeamSeason, Player, PlayerSeason
+
+def game_parser(id):
+    url = "http://stats.ncaa.org/game/box_score/%s" % id
+    soup = soupify(url)
+    game_details = soup.findAll('table')[2]
+    dt = parse(game_details.findAll('td')[1].contents[0])
+    loc = game_details.findAll('td')[3].contents[0]
+    attend = int(game_details.findAll('td')[5].contents[0].replace(',',''))
+    officials = soup.findAll('table')[3].findAll('td')[1].contents[0].strip()
+    
+    
+    
 
 def team_parser(season_id=2011, division="1"):
     # defaults to division 1, but also supports division 3
     season = Season.objects.get(end_year=season_id)
     url = "http://stats.ncaa.org/team/inst_team_list/%s?division=%s" % (season.ncaa_id, division)
-    html = urllib.urlopen(url).read()
-    soup = BeautifulSoup(html)
+    soup = soupify(url)
     team_links = [x.find('a') for x in soup.findAll('td')]
     for team in team_links:
         ncaa_id = int(team["href"].split("=")[1])
@@ -19,8 +31,7 @@ def team_parser(season_id=2011, division="1"):
 def roster_parser(season_id, team_id, division=1):
     team_season = TeamSeason.objects.select_related().get(team__ncaa_id=team_id, season__end_year=season_id)
     url = "http://stats.ncaa.org/team/index/%s?org_id=%s" % (team_season.season.ncaa_id, team_id)
-    html = urllib.urlopen(url).read()
-    soup = BeautifulSoup(html)
+    soup = soupify(url)
     rows = soup.findAll('table')[2].findAll('tr')
     player_links = rows[2:len(rows)]
     for p in player_links:
