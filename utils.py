@@ -1,5 +1,6 @@
 import urllib
 from BeautifulSoup import BeautifulSoup
+from ncaa_api.mbb.models import Season
 
 def soupify(url):
     """
@@ -8,3 +9,8 @@ def soupify(url):
     html = urllib.urlopen(url).read()
     soup = BeautifulSoup(html)
     return soup
+    
+
+def create_initial_seasons():
+    twenty_eleven = Season.objects.create(season='2010-11', start_year=2010, end_year=2011, ncaa_id=10440)
+    twenty_ten = Season.objects.create(season='2009-10', start_year=2009, end_year=2010, ncaa_id=10260)
