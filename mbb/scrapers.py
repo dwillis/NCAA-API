@@ -4,12 +4,13 @@ from ncaa_api.utils import soupify
 from django.utils.safestring import SafeUnicode
 from ncaa_api.mbb.models import Game, Season, Team, TeamSeason, Player, PlayerSeason
 
-def game_parser(id):
-    url = "http://stats.ncaa.org/game/box_score/%s" % id
+def game_parser(game_id, season_id=2011):
+    url = "http://stats.ncaa.org/game/box_score/%s" % game_id
     soup = soupify(url)
+    season = Season.objects.get(end_year=season_id)
     visit_id, home_id = [int(x['href'].split('=')[1]) for x in soup.findAll('table')[0].findAll('a')]
-    visit = Team.objects.get(ncaa_id=visit_id)
-    home = Team.objects.get(ncaa_id=home_id)
+    visit = TeamSeason.objects.select_related().get(team__ncaa_id=visit_id, season=season)
+    home = TeamSeason.objects.select_related().get(team__ncaa_id=home_id, season=season)
     game_details = soup.findAll('table')[2]
     dt = parse(game_details.findAll('td')[1].contents[0])
     loc = game_details.findAll('td')[3].contents[0]
@@ -18,7 +19,9 @@ def game_parser(id):
     scores = soup.findAll('table')[0].findAll('td', attrs={'align':'right'})
     visit_team_scores = [int(x.renderContents()) for x in scores[0:len(scores)/2]]
     home_team_scores = [int(x.renderContents()) for x in scores[len(scores)/2:len(scores)]] # second team listed is considered home team
-    game, created = Game.objects.get_or_create(ncaa_id=id, home_team=home, visiting_team=visit, datetime=dt, location=loc, attendance=attend, officials=officials, home_team_score=home_team_scores[(len(scores)/2)-1], visiting_team_score=visit_team_scores[(len(scores)/2)-1])
+    home_final = home_team_scores[(len(scores)/2)-1]
+    visit_final = visit_team_scores[(len(scores)/2)-1]
+    game, created = Game.objects.get_or_create(ncaa_id=game_id, home_team=home, visiting_team=visit, datetime=dt, location=SafeUnicode(loc), attendance=attend, officials=SafeUnicode(officials), home_team_score=home_final, visiting_team_score=visit_final)
 
 def team_parser(season_id=2011, division="1"):
     # defaults to division 1, but also supports division 3
