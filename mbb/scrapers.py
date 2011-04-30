@@ -2,19 +2,23 @@ import datetime
 from dateutil.parser import *
 from ncaa_api.utils import soupify
 from django.utils.safestring import SafeUnicode
-from ncaa_api.mbb.models import Season, Team, TeamSeason, Player, PlayerSeason
+from ncaa_api.mbb.models import Game, Season, Team, TeamSeason, Player, PlayerSeason
 
 def game_parser(id):
     url = "http://stats.ncaa.org/game/box_score/%s" % id
     soup = soupify(url)
+    visit_id, home_id = [int(x['href'].split('=')[1]) for x in soup.findAll('table')[0].findAll('a')]
+    visit = Team.objects.get(ncaa_id=visit_id)
+    home = Team.objects.get(ncaa_id=home_id)
     game_details = soup.findAll('table')[2]
     dt = parse(game_details.findAll('td')[1].contents[0])
     loc = game_details.findAll('td')[3].contents[0]
     attend = int(game_details.findAll('td')[5].contents[0].replace(',',''))
     officials = soup.findAll('table')[3].findAll('td')[1].contents[0].strip()
-    
-    
-    
+    scores = soup.findAll('table')[0].findAll('td', attrs={'align':'right'})
+    visit_team_scores = [int(x.renderContents()) for x in scores[0:len(scores)/2]]
+    home_team_scores = [int(x.renderContents()) for x in scores[len(scores)/2:len(scores)]] # second team listed is considered home team
+    game, created = Game.objects.get_or_create(ncaa_id=id, home_team=home, visiting_team=visit, datetime=dt, location=loc, attendance=attend, officials=officials, home_team_score=home_team_scores[(len(scores)/2)-1], visiting_team_score=visit_team_scores[(len(scores)/2)-1])
 
 def team_parser(season_id=2011, division="1"):
     # defaults to division 1, but also supports division 3
