@@ -1,5 +1,6 @@
 from django.db import models
 from django.template.defaultfilters import slugify
+from django.utils.encoding import smart_unicode
 from decimal import *
 
 class Team(models.Model):
@@ -12,7 +13,7 @@ class Team(models.Model):
     slug = models.SlugField(max_length=125)
     
     def __unicode__(self):
-        return self.name
+        return smart_unicode(self.name)
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -30,7 +31,7 @@ class Season(models.Model):
     ncaa_id = models.IntegerField()
     
     def __unicode__(self):
-        return self.season
+        return smart_unicode(self.season)
 
 class TeamSeason(models.Model):
     """
@@ -86,7 +87,7 @@ class TeamSeason(models.Model):
     opp_fouls = models.IntegerField(default=0)
     
     def __unicode__(self):
-        return u'%s in %s' % (self.team, self.season)
+        return smart_unicode('%s in %s') % (self.team, self.season)
     
     def ncaa_url(self):
         return "http://stats.ncaa.org/team/index/%s?org_id=%s" % (self.season.ncaa_id, self.team.ncaa_id)
@@ -104,7 +105,7 @@ class Player(models.Model):
     ncaa_id = models.IntegerField()
     
     def __unicode__(self):
-        return self.name
+        return smart_unicode(self.name)
     
     def save(self, *args, **kwargs):
         self.slug = slugify(self.name)
@@ -152,10 +153,10 @@ class PlayerSeason(models.Model):
     triple_doubles = models.IntegerField(default=0)
     
     def __unicode__(self):
-        return u'%s, %s' % (self.player, self.team_season)
+        return smart_unicode('%s, %s') % (self.player, self.team_season)
     
     def height(self):
-        return u'%s-%s' % (self.feet, self.inches)
+        return smart_unicode('%s-%s') % (self.feet, self.inches)
     
     def ncaa_url(self):
         return "http://stats.ncaa.org/player?game_sport_year_ctl_id=%s&stats_player_seq=%s" % (self.team_season_id, self.player_id)
@@ -176,7 +177,7 @@ class Game(models.Model):
     visiting_team_score = models.IntegerField()
     
     def __unicode__(self):
-        return u"%s" % self.ncaa_id
+        return smart_unicode("%d") % self.ncaa_id
     
     def box_score_url(self):
         return "http://stats.ncaa.org/game/box_score/%s" % self.ncaa_id
