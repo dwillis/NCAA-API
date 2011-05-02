@@ -4,17 +4,29 @@ from ncaa_api.utils import soupify
 from django.utils.safestring import SafeUnicode
 from ncaa_api.mbb.models import Game, Season, Team, TeamSeason, Player, PlayerSeason
 
+def load_team_schedules(season_id):
+    teams = Team.objects.all()
+    for team in teams:
+        schedule_parser(season_id, team.ncaa_id)
+
 def game_parser(game_id, season_id=2011):
     url = "http://stats.ncaa.org/game/box_score/%s" % game_id
     soup = soupify(url)
     season = Season.objects.get(end_year=season_id)
     visit_id, home_id = [int(x['href'].split('=')[1]) for x in soup.findAll('table')[0].findAll('a')]
-    visit = TeamSeason.objects.select_related().get(team__ncaa_id=visit_id, season=season)
+    try:
+        visit = TeamSeason.objects.select_related().get(team__ncaa_id=visit_id, season=season)
+    except:
+        v_team, created = Team.objects.get_or_create(ncaa_id=visit_id, name=soup.findAll('table')[0].findAll('a')[0].renderContents())
+        visit = TeamSeason.objects.create(team=v_team, season=season, division=0)
     home = TeamSeason.objects.select_related().get(team__ncaa_id=home_id, season=season)
     game_details = soup.findAll('table')[2]
     dt = parse(game_details.findAll('td')[1].contents[0])
     loc = game_details.findAll('td')[3].contents[0]
-    attend = int(game_details.findAll('td')[5].contents[0].replace(',',''))
+    try:
+        attend = int(game_details.findAll('td')[5].contents[0].replace(',',''))
+    except:
+        attend = None
     officials = soup.findAll('table')[3].findAll('td')[1].contents[0].strip()
     scores = soup.findAll('table')[0].findAll('td', attrs={'align':'right'})
     visit_team_scores = [int(x.renderContents()) for x in scores[0:len(scores)/2]]
@@ -35,6 +47,19 @@ def team_parser(season_id=2011, division="1"):
         t, created = Team.objects.get_or_create(ncaa_id = ncaa_id, name = name)
         team_season, created = TeamSeason.objects.get_or_create(team=t, season=season, division=1)
 
+def schedule_parser(season_id, team_id):
+    season = Season.objects.get(ncaa_id=season_id)
+    url = "http://stats.ncaa.org/team/index/%s?org_id=%s" % (season_id, team_id)
+    soup = soupify(url)
+    game_ids = []
+    links = soup.findAll('table')[1].findAll(lambda tag: tag.name == 'a' and tag.findParent('td', attrs={'class':'smtext'}))
+    for link in links:
+        if not link.has_key('onclick'):
+            game_ids.append(int(link["href"].split("?")[0].split("/")[3]))
+    for game_id in game_ids:
+        game_parser(game_id)
+
+    
 def roster_parser(season_id, team_id, division=1):
     team_season = TeamSeason.objects.select_related().get(team__ncaa_id=team_id, season__end_year=season_id)
     url = "http://stats.ncaa.org/team/index/%s?org_id=%s" % (team_season.season.ncaa_id, team_id)

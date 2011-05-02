@@ -1,6 +1,6 @@
 import urllib
 from BeautifulSoup import BeautifulSoup
-from ncaa_api.mbb.models import Season
+from ncaa_api.mbb.models import Season, Team
 
 def soupify(url):
     """

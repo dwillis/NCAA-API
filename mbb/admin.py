@@ -17,7 +17,7 @@ class PlayerSeasonAdmin(admin.ModelAdmin):
     list_display = ('player', 'team_season', 'position', 'year')
 
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('home_team', 'home_team_score', 'visiting_team', 'visiting_team_score', 'datetime')
+    list_display = ('ncaa_id', 'home_team', 'home_team_score', 'visiting_team', 'visiting_team_score', 'datetime')
 
 admin.site.register(Season, SeasonAdmin)
 admin.site.register(Team, TeamAdmin)
