@@ -4,10 +4,10 @@ from mbb.models import Season, Team
 
 def soupify(url):
     """
-    Takes a url and returns parsed html via BeautifulSoup and urllib. Used by the scrapers.
+    Takes a url and returns parsed html via BeautifulSoup and requests. Used by the scrapers.
     """
-    html = urllib.urlopen(url).read()
-    soup = BeautifulSoup(html)
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text)
     return soup
 
 
