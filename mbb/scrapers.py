@@ -1,8 +1,8 @@
 import datetime
 from dateutil.parser import *
-from ncaa_api.utils import soupify
+from utils import soupify
 from django.utils.safestring import SafeUnicode
-from ncaa_api.mbb.models import Game, Season, Team, TeamSeason, Player, PlayerSeason
+from mbb.models import Game, Season, Team, TeamSeason, Player, PlayerSeason
 
 def load_team_schedules(season_id):
     teams = Team.objects.all()
@@ -59,7 +59,7 @@ def schedule_parser(season_id, team_id):
     for game_id in game_ids:
         game_parser(game_id)
 
-    
+
 def roster_parser(season_id, team_id, division=1):
     team_season = TeamSeason.objects.select_related().get(team__ncaa_id=team_id, season__end_year=season_id)
     url = "http://stats.ncaa.org/team/index/%s?org_id=%s" % (team_season.season.ncaa_id, team_id)
